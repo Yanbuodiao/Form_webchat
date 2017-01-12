@@ -1,0 +1,35 @@
+﻿@{
+    ViewBag.Title = "微信扫码";
+}
+
+<h2>微信扫码</h2>
+@ViewBag.Message
+<div style="width:420px" id="loadDiv">
+    <img src="@Url.Action("LoadQRCode", "Home")" style="width:280px;height:280px">
+</div>
+<script>
+    $(document).ready(function () {
+        var timer = null;
+        clearInterval(timer);
+        timer = setInterval(function () {
+            $.ajax({
+                url: '@Url.Action("QueryLogin")',
+                datatype: "text",
+                type: "get",
+                success: function (data) {
+                    console.log(data.status);
+                    if (data.status == 1) {
+                        clearInterval(timer);
+                        $("#loadDiv").html("已经登录成功！,开始自动下载并处理数据");
+                        $.ajax({
+                            url: '@Url.Action("Handle")',
+                            datatype: "text",
+                            type: "get",
+                        });
+                    }
+                }
+            });
+        }, 1000);
+    });
+</script>
+

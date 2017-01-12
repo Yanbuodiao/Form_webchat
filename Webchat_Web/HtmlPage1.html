@@ -1,0 +1,451 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta charset="utf-8">
+    <script type="text/javascript">
+
+        window._points = [+new Date()];
+
+
+        function wx_main(mod) {
+            window._points && (window._points[3] = +new Date());
+        };
+
+        window.wx = {
+            uin: "" || "0"
+        };
+
+
+        window.wx_loaderror = function (ele) {
+            var _img = new Image();
+            var key = 63;
+            if (ele && ele.tagName && ele.tagName.toLowerCase() == "script") {
+                key = 64;
+
+                BJ_REPORT.destory();
+            }
+            _img.src = "https://badjs.weixinbridge.com/badjs?id=" + BJ_REPORT.IDS.LINK + "&uin=" + (wx && wx.uin) + "&msg=" + encodeURIComponent("link_error:" + (ele && (ele.href || ele.src))) + "|link&from=" + encodeURIComponent(location.href) + "&level=4&_t=" + (+new Date);
+
+            var key_img = new Image();
+            key_img.src = "https://mp.weixin.qq.com/misc/jslog?id=" + key + "&content=link_error&level=error";
+        };
+    </script>
+    <script onerror="            wx_loaderror(this)" type="text/javascript" src="https://res.wx.qq.com/mpres/zh_CN/htmledition/js/common/wx/jserr331295.js"></script>
+    <title>微信公众平台</title>
+    <link href="https://res.wx.qq.com/mpres/htmledition/images/favicon218877.ico" rel="Shortcut Icon">
+    <link onerror="            wx_loaderror(this)" rel="stylesheet" type="text/css" href="https://res.wx.qq.com/mpres/htmledition/style/base/layout_head330daf.css" />
+    <link onerror="            wx_loaderror(this)" rel="stylesheet" type="text/css" href="https://res.wx.qq.com/mpres/htmledition/style/base/base331295.css" />
+    <link onerror="            wx_loaderror(this)" rel="stylesheet" type="text/css" href="https://res.wx.qq.com/mpres/htmledition/style/base/lib330daf.css" />
+    <link onerror="            wx_loaderror(this)" rel="stylesheet" href="https://res.wx.qq.com/mpres/htmledition/style/page/page_news218878.css">
+    <link onerror="            wx_loaderror(this)" rel="stylesheet" href="https://res.wx.qq.com/mpres/htmledition/style/page/page_force_change_pwd2254d3.css">
+    <style>
+        .page_msg.large {
+            width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page_msg.page_msg_tips {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .spacing {
+            margin-top: 15px;
+            margin-bottom: 0;
+        }
+
+        .main_bd {
+            padding-bottom: 90px;
+        }
+
+        .step3_safe_tips.page_msg .inner {
+            padding-top: 75px;
+        }
+
+        .step3_safe_tips.page_msg .msg_content {
+            padding-top: 5px;
+        }
+
+        .qrcode_scan_ft {
+            margin-top: 40px;
+        }
+
+            .qrcode_scan_ft p {
+                margin-bottom: 1em;
+            }
+
+            .qrcode_scan_ft .qa a {
+                color: #8d8d8d;
+            }
+
+        .qrcode_scan.qrcode_scan_light {
+            text-align: center;
+            width: 420px;
+        }
+
+            .qrcode_scan.qrcode_scan_light .qrcode_wrp {
+                display: inline-block;
+            }
+
+            .qrcode_scan.qrcode_scan_light .js_status {
+                width: 420px;
+            }
+
+            .qrcode_scan.qrcode_scan_light .status {
+                padding: 7px 0;
+                width: 260px;
+                margin: 0 auto;
+            }
+
+                .qrcode_scan.qrcode_scan_light .status.tips {
+                    width: auto;
+                }
+    </style>
+    <link rel="stylesheet" type="text/css" href="https://res.wx.qq.com/c/=/mpres/htmledition/style/widget/processor_bar218878.css,/mpres/htmledition/style/widget/qrcode_scan262dd6.css" />
+</head>
+<body class="zh_CN">
+    <div class="head" id="header">
+        <script type="text/javascript">
+
+            window._points && (window._points[1] = +new Date());
+        </script><div class="head_box">    <div class="inner wrp">        <h1 class="logo"><a href="/" title="微信公众平台"></a></h1>                                <div class="account">                                            </div>                    </div></div>
+    </div>        <div id="body" class="body page_simple page_validate_wx">            <div class="container_box">                <div class="main_hd">    <h2>安全保护</h2></div><div class="main_bd">    <div class="page_msg mini" id="js_can_not_scan" style="display:none;">        <div class="inner group">            <span class="msg_icon_wrp">                <i class="icon_msg_mini info"></i>            </span>            <div class="msg_content">            <p> 你可以跳过扫码选择<a id="js_login" href="javascript:">直接登录</a>，在<span id="js_not_scan_date"></span>起将必须扫码才能登录</p>            </div>        </div>    </div>    <div class="safe_check safe_check_msg js_no_helper1" style="display:none;">        <div class="page_msg large simple default">            <div class="inner group">                <span class="msg_icon_wrp">                    <i class="icon_msg info"></i>                </span>                <div class="msg_content">                    <h4>为了更好的保护公众号的安全，登录账号需开启微信保护</h4>                    <p>登录账号前，需先绑定管理员微信号并开启微信保护。开启后即可进行登录（需管理员微信号进行验证）。<a href='/cgi-bin/readtemplate?t=setting/safe-protect-detail-faq_tmpl&lang=zh_CN' target="_blank">详细说明</a></p>                    <a href="javascript:;" class="btn btn_primary js_btn">开始</a>                </div>            </div>        </div>    </div>    <div class="safe_check safe_check_msg js_off_protect1" style="display:none;">        <div class="page_msg large simple default">            <div class="inner group">                <span class="msg_icon_wrp">                    <i class="icon_msg info"></i>                </span>                <div class="msg_content">                    <h4>为了更好的保护公众号的安全，登录账号需开启微信保护</h4>                    <p>登录账号前，请开启微信保护，开启后即可进行登录（需管理员微信号进行验证）。<a href='/cgi-bin/readtemplate?t=setting/safe-protect-detail-faq_tmpl&lang=zh_CN' target="_blank">详细说明</a></p>                    <a href="javascript:;" class="btn btn_primary js_btn">开始</a>                </div>            </div>        </div>    </div>    <div class="page_msg default small page_msg_tips js_tips js_step3 step3_safe_tips" style="display: none">        <div class="inner group">            <span class="msg_icon_wrp">                <i class="icon_msg_small js_icon"></i>            </span>            <div class="msg_content">                <div class="js_wording"></div>            </div>        </div>    </div>    <div class="safe_check safe_check_msg js_request" style="display:none;">        <div class="page_msg large simple default ">            <div class="inner group">                <span class="msg_icon_wrp"><i class="icon_msg waiting js_authIcon"></i></span>                <div class="msg_content">                    <h4 class="js_authTitle">已发送操作申请</h4>                    <p class="js_authTips">请等待公众号管理员微信号（<span class="js_request_alias"></span>）验证操作申请，验证通过后操作将立即进行。此申请在30分钟后过期，请尽快联系管理员验证。</p>                </div>            </div>        </div>    </div>    <div class="js_scan tc js_step3" style="display: none">   <div class="qrcode_scan qrcode_scan_light">        <div class="qrcode_wrp">            <img class="qrcode js_qrcode" src="" />        </div>        <div class="js_status">        </div>    </div>    </div><div class="qrcode_scan_ft js_step3" style="display: none">                <p class="tc">            如需要更多帮助，可查看<a target="_blank" href="http://kf.qq.com/faq/120911VrYVrA160907AbYneM.html">操作指引</a>        </p>        </div>   </div>            </div>        </div>        <div class="foot" id="footer"><ul class="links ft"><li class="links_item no_extra"><a href="http://www.tencent.com/zh-cn/index.shtml" target="_blank">关于腾讯</a></li><li class="links_item"><a href="/cgi-bin/readtemplate?t=home/agreement_tmpl&type=info&lang=zh_CN&token=" target="_blank">服务协议</a></li><li class="links_item"><a href="/cgi-bin/readtemplate?t=business/faq_operation_tmpl&type=info&lang=zh_CN&token=" target="_blank">运营规范</a></li><li class="links_item"><a href="/cgi-bin/opshowpage?action=dispelinfo&lang=zh_CN&begin=1&count=9" target="_blank">辟谣中心</a></li><li class="links_item"><a href="http://kf.qq.com/faq/120911VrYVrA1509086vyumm.html" target="_blank">客服中心</a></li>                        <li class="links_item"><a href="mailto:weixinmp@qq.com" target="_blank">联系邮箱</a></li>            <li class="links_item"><a href="/acct/infringementlogin?action=getkey&lang=zh_CN" target="_blank">侵权投诉</a></li>                            <li class="links_item"><p class="copyright">Copyright &copy; 2012-2017 Tencent. All Rights Reserved.</p> </li>                </ul>    </div>
+    <script type="text/javascript">
+
+        window._points && (window._points[2] = +new Date());
+    </script>
+
+    <script type="text/javascript">
+        try {
+            window.wx = {
+                version: "4.0.0",
+                uin: "",
+                data: {
+                    t: "",
+                    ticket: "",
+                    lang: 'zh_CN',
+                    param: ["&token=", '&lang=zh_CN'].join(""),
+                    uin: "",
+                    uin_base64: "",
+                    user_name: "",
+                    nick_name: "",
+                    time: "" || new Date().getTime() / 1000
+                },
+                path: {
+                    video: "https://res.wx.qq.com/mpres/zh_CN/htmledition/plprecorder/biz_web/video-js218877.swf",
+                    audio: "https://res.wx.qq.com/mpres/zh_CN/htmledition/plprecorder/biz_web/audiojs218877.swf",
+                    uploadify: "https://res.wx.qq.com/mpres/zh_CN/htmledition/plprecorder/biz_web/uploadify.swf",
+                    webuploader: "https://res.wx.qq.com/mpres/zh_CN/htmledition/plprecorder/biz_web/webuploader230dc3.swf",
+                    zoom: "https://res.wx.qq.com/mpres/zh_CN/htmledition/plprecorder/biz_web/zoom230dc3.swf",
+                    zeroClipboard_new: "https://res.wx.qq.com/mpres/zh_CN/htmledition/plprecorder/biz_web/ZeroClipboard_new2ee4ed.swf",
+                    rimgcrop: "https://res.wx.qq.com/mpres/htmledition/images/cut-round218877.gif"
+                },
+                acl: {
+                    "ad_system": {
+                        "can_use_sp": "" * 1, "can_use_new_ad": "" * 1
+                    }
+                },
+                events: {}
+            };
+        } catch (error) {
+            if (error && error.stack) {
+                error.stack += "|try";
+            }
+            BJ_REPORT && BJ_REPORT.report && BJ_REPORT.report(error);
+            var orgOnerror = window.onerror;
+            window.onerror = function () { };
+            setTimeout(function () {
+                window.onerror = orgOnerror;
+            }, 50);
+            throw error;
+        }
+    </script>
+    <script onerror="            wx_loaderror(this)" type="text/javascript" src="https://res.wx.qq.com/mpres/zh_CN/htmledition/js/sea27d2ff.js"></script>
+    <script onerror="            wx_loaderror(this)" type="text/javascript" src="https://res.wx.qq.com/mpres/zh_CN/htmledition/js/common/lib27616c.js"></script>
+    <script onerror="            wx_loaderror(this)" type="text/javascript" src="https://res.wx.qq.com/mpres/zh_CN/htmledition/js/common/wx3274ca.js"></script>
+    <script type="text/javascript">
+        function getico(o) {
+            var i = new Image(1, 1);
+            i.src = wx.url && wx.url(location.protocol + "//" + location.host + "/misc/getico?location=" + (o || -1) + "&rand=" + Math.random());
+        }
+        jQuery(function () {
+            window._points && (window._points[4] = +new Date), getico("");
+        });
+    </script>
+    <script type="text/javascript">
+        define('widget/processor_bar.css', [], function () { return null; });
+        define('widget/qrcode_scan.css', [], function () { return null; });</script>
+    <script onerror="            wx_loaderror(this)" type="text/javascript" src="https://res.wx.qq.com/c/=/mpres/zh_CN/htmledition/js/tpl/biz_web/ui/checkbox.html218877.js,/mpres/zh_CN/htmledition/js/common/wx/overseasList2e2bf4.js,/mpres/zh_CN/htmledition/js/tpl/popup.html30bdda.js,/mpres/zh_CN/htmledition/js/common/wx/widgetBridge218877.js,/mpres/zh_CN/htmledition/js/tpl/dialog.html253a4f.js,/mpres/zh_CN/htmledition/js/biz_common/jquery.ui/jquery.ui.draggable26d05a.js,/mpres/zh_CN/htmledition/js/biz_web/lib/spin218878.js,/mpres/zh_CN/htmledition/js/safe/tpl/safe_check.html2ea0fb.js,/mpres/zh_CN/htmledition/js/biz_web/ui/checkbox2880f5.js,/mpres/zh_CN/htmledition/js/safe/Mobile2cc465.js,/mpres/zh_CN/htmledition/js/tpl/step.html218877.js,/mpres/zh_CN/htmledition/js/common/qq/events2a4e1d.js,/mpres/zh_CN/htmledition/js/common/lib/MockJax218877.js,/mpres/zh_CN/htmledition/js/common/wx/cgiReport32caa3.js,/mpres/zh_CN/htmledition/js/common/qq/mask218877.js"></script>
+    <script onerror="            wx_loaderror(this)" type="text/javascript" src="https://res.wx.qq.com/c/=/mpres/zh_CN/htmledition/js/biz_common/moment26d05a.js,/mpres/zh_CN/htmledition/js/safe/safe_check2ea0fb.js,/mpres/zh_CN/htmledition/js/common/wx/Step218877.js,/mpres/zh_CN/htmledition/js/safe/Scan327a98.js,/mpres/zh_CN/htmledition/js/user/validate_wx32a1ca.js"></script>
+    <script type='text/javascript'>
+        (function () {
+            try {
+                if ('localStorage' in window && window['localStorage'] !== null) {
+                    var local_key = "DEV_MP_MODULES";
+                    var data = localStorage.getItem("DEV_MP_MODULES");
+                    if (data) {
+                        try {
+                            data = JSON.parse(data);
+                        } catch (e) {
+                            data = {};
+                        }
+                    } else {
+                        data = {};
+                    }
+                    if (MODULES && (typeof MODULES == "object")) {
+                        for (var name in data) {
+                            //限制mp域名的才能替换
+                            if (/mp\.weixin\.qq\.com/.test(data[name])) {
+                                MODULES[name] = data[name];
+                                //添加监控防止外部滥用
+                                var _img = new Image();
+                                _img.src = "https://mp.weixin.qq.com/misc/jslog?id=112&content=[dev_proxy][url=" + encodeURIComponent(data[name]) + "]&level=error";
+                            }
+
+                        }
+                    }
+                }
+            } catch (e) {
+                if (e == "Error: 拒绝访问。") {
+
+                } else {
+                    var _img = new Image();
+                    _img.src = "https://mp.weixin.qq.com/misc/jslog?id=113&content=[dev_proxy][try_catch=" + e + "]&level=error";
+                }
+            }
+        })();</script>
+    <script type="text/javascript">
+        wx.cgiData = {
+            ticket: "f612f95faf7e47cce08b"
+            , aSource: ""
+        , account: "yanbuodiao@hotmail.com"
+        , bindalias: "henry"
+            , mobile: ""
+            , wx_protect: "1"
+            , protect_status: ""
+            , direct_login_before_time: ""
+        };
+        seajs.use('user/validate_wx', wx_main);;
+    </script>
+    <script type="text/html" id="js_faqscene_tpl">
+        <div class="faqscene" id="js_faqscene_p">
+            <div class="faqscene_inner">
+                <div class="faqscene_name js_faq_trigger">常见问题</div>
+                <div class="faqscene_panel js_faq_main_panel">
+                    <a href="###" class="faqscene_close">x</a>
+                    <div class="faqscene_hd">{data.question}</div>
+                    <div class="faqscene_bd">
+                        <div class="faqscene_tabs">
+                            <div class="faqscene_tab_hd">
+                                <ul class="js_faq_class1">
+                                    {if data.guide_list.length>2}
+                                    {each data.guide_list as guide i}
+                                    {if guide}
+                                    <li data-report-id="{guide.report_id}"><a {if i= =0}class ="active" { />if} href="javascript:;">{guide.itemname}</a></li>
+                                    {/if}
+
+                                    {/each}
+                                    {/if}
+                                </ul>
+                            </div>
+                            {if data.guide_list.length>1}
+                            {/if}
+                            {each data.guide_list as guide i}
+                            {if guide}
+                            <div class="faqscene_tab_bd js_faqscene_content">
+                                <ul>
+                                    {each guide.subitems as subitem i}
+                                    {if subitem}
+                                    <li><a target="_blank" href="{subitem.kf_url}">{subitem.title}</a></li>
+                                    {/if}
+                                    {/each}
+                                </ul>
+                            </div>
+                            {/if}
+                            {/each}
+                        </div>
+                    </div>
+                    <div class="faqscene_ft"><a href="{data.more_help.kf_url}" target="_blank">{data.more_help.title}</a></div>
+                </div>
+            </div>
+        </div>
+    </script>
+    <script type="text/javascript">
+
+        ;;; (function () {
+
+            var jq = jQuery;
+            var dom = null;
+            var panel = null;
+            var close = null
+            var faqArea = null;
+            var timer = null;
+            var tab_heads = null;
+            var tab_contents = null;
+            var token = ""
+            var report_id = null;
+
+
+            function loadDataAndInit() {
+                var param = "&cginame=" + urlParser.parser.pathname.replace(/^\//, '');
+                var tValue = urlParser.getParam("t");
+                var actionValue = urlParser.getParam("action");
+                var pluginid = urlParser.getParam('pluginid');
+
+                param += token
+                         ? ("&token=" + token)
+                         : "";
+                param += tValue
+                         ? ("&t=" + tValue)
+                         : ("&action=" + actionValue);
+                param += pluginid
+                         ? ("&pluginid=" + pluginid)
+                         : "";
+
+                var getFAQUrl = "/misc/faq?action=getfaq&lang=zh_CN&f=json" + param;
+
+                $.ajax({
+                    type: "GET",
+                    url: getFAQUrl
+                }).success(function (data) {
+                    if (data.base_resp.ret !== 0) return;
+                    wx.faq_list = data.base_resp.assistant.problem;
+                    if (!wx.faq_list.question) return;
+                    renderFaq();
+                    makeActions();
+                    initReport();
+                    panel.hide();
+                    goto(0);
+                }).error(function (error) {
+                    ;
+                });
+            }
+
+            function renderFaq() {
+                jq("body").append(template.render("js_faqscene_tpl", { data: wx.faq_list }));
+                dom = jq("#js_faqscene_p");
+                panel = dom.find(".js_faq_main_panel");
+                close = dom.find(".faqscene_close");
+                faqArea = dom.find(".faqscene_inner");
+                timer = null;
+                tab_heads = dom.find(".js_faq_class1 li");
+                tab_contents = dom.find(".js_faqscene_content");
+            }
+
+
+            function goto(idx) {
+                var $currentTab = tab_heads.eq(idx);
+                tab_contents.hide();
+                subitem = $currentTab.find("a").text();
+                report_id = (idx === 0)
+                          ? wx.faq_list.guide_list[0].report_id
+                          : $currentTab.data("report-id");
+                jq(tab_contents[idx]).show();
+                tab_heads.find("a").removeClass("active");
+                jq(tab_heads[idx]).find("a").addClass("active");
+            }
+
+            function makeActions() {
+                tab_heads.click(function () {
+                    var idx = jq(this).index();
+                    goto(idx);
+                });
+
+
+                close.on("click", function (event) {
+                    event.preventDefault();
+                    clearTimeout(timer);
+                    panel.hide();
+                });
+
+
+                faqArea.on("mouseover", function () {
+                    clearTimeout(timer);
+                    panel.show();
+                });
+
+                faqArea.on("mouseout", function (event) {
+                    timer = setTimeout(function () {
+                        panel.hide();
+                    }, 300);
+                });
+            }
+
+
+            var subitem = null;
+            var questText = "none";
+            var questLink = "none";
+            var urlParser = new URLParser(window.location.href);
+
+            function initReport() {
+                subitem = wx.faq_list.guide_list[0].itemname;
+                report_id = wx.faq_list.guide_list[0].report_id;
+
+                jq("div.js_faqscene_content").find("a").click(function (event) {
+                    var $question = jq(this);
+                    questText = $question.text();
+                    questLink = $question.attr("href");
+                    var reportData = getReportData();
+                    report(reportData);
+                });
+
+                jq("div.faqscene_ft a").click(function (event) {
+                    var $more = jq(this);
+                    questText = $more.text();
+                    var reportData = getReportData();
+                    reportData.report_id = wx.faq_list.help_report_id;
+                    report(reportData);
+                });
+            }
+
+
+            function report(data) {
+
+                var reportUrl = "/misc/faq?action=report"
+                $.ajax({
+                    url: reportUrl,
+                    data: data,
+                    type: "POST"
+                }).success(function (data) {
+
+                });
+            }
+
+
+            function getReportData() {
+                var data = {};
+                data.report_id = report_id;
+                data.question = questText;
+                data.action = "report";
+
+                return data;
+            }
+
+
+
+            function URLParser(url) {
+
+
+                var $el = jq("<a></a>").attr("href", url);
+                this.el = $el.get(0);
+                this.parser = this.el;
+            }
+
+
+            URLParser.prototype.getParam = function (key) {
+                var KEY_REG = new RegExp("([\?&])" + key + "=([^&#]*)([&#])?");
+                var result = this.el.search.match(KEY_REG);
+                return result
+                       ? result[2]
+                       : null;
+            };
+
+
+            loadDataAndInit();
+        })();
+    </script>
+</body>
+</html>
