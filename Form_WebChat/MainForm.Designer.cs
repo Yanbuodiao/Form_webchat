@@ -47,9 +47,11 @@
             // lbl_summary
             // 
             this.lbl_summary.AutoSize = true;
-            this.lbl_summary.Location = new System.Drawing.Point(4, 4);
+            this.lbl_summary.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_summary.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lbl_summary.Location = new System.Drawing.Point(0, 0);
             this.lbl_summary.Name = "lbl_summary";
-            this.lbl_summary.Size = new System.Drawing.Size(71, 12);
+            this.lbl_summary.Size = new System.Drawing.Size(105, 21);
             this.lbl_summary.TabIndex = 0;
             this.lbl_summary.Text = "lbl_summary";
             // 

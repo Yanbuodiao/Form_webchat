@@ -1,12 +1,14 @@
-﻿using System;
+﻿using Form_WebChat.Modle;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
-using NPOI.HSSF.UserModel;
-using NPOI.SS.Util;
 
 namespace Form_WebChat
 {
@@ -15,12 +17,14 @@ namespace Form_WebChat
         static string userAgent = " Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36";
         static string strMPAccount = System.Configuration.ConfigurationManager.AppSettings["UserName"].Trim();
         static string strMPPassword = System.Configuration.ConfigurationManager.AppSettings["PWD"].Trim();
-        static string strLoingMinutes = System.Configuration.ConfigurationManager.AppSettings["LoingMinutes"].Trim();
+        static int intervalMinutes = int.Parse(System.Configuration.ConfigurationManager.AppSettings["IntervalMinutes"].Trim());
+        static string uploadURL = System.Configuration.ConfigurationManager.AppSettings["UploadURL"].Trim();
         static string appticket;
         static string binddalias;
         static CookieContainer Cookie_WebChat = new CookieContainer();//接收缓存
         static string token;
-        System.Timers.Timer timer;
+        static System.Timers.Timer timer;
+        static System.Timers.Timer taskTimer;
         public MainForm()
         {
             InitializeComponent();
@@ -28,9 +32,6 @@ namespace Form_WebChat
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-
-            //downloadFile(2, "");
-
             WeiXinRetInfo retinfo = webChatLogin();
             if (retinfo != null && retinfo.base_resp.ret == 0)
             {
@@ -77,19 +78,25 @@ namespace Form_WebChat
                 retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(responseText);
                 if (retinfo.status == 1)
                 {
-                    timer.Close();
+                    timer.Stop();
                     if (getCookieAndToken())
                     {
                         lbl_summary.BeginInvoke(new MethodInvoker(() =>
                         {
                             lbl_summary.Text = "认证成功，开始下载数据并处理";
-                            downAndHandleData();
+
+                            pictureBox1.Visible = false;
+                            ThreadPool.QueueUserWorkItem(_ =>
+                            {
+                                downAndHandleData();
+                            });
                         }), null);
                     }
                     else
                     {
                         lbl_summary.BeginInvoke(new MethodInvoker(() => lbl_summary.Text = "认证失败"), null);
                     }
+                    timer.Close();
                 }
             }
             return retinfo;
@@ -181,7 +188,8 @@ namespace Form_WebChat
                 WeiXinRetInfo retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(responseText);
                 if (retinfo != null && !string.IsNullOrEmpty(retinfo.redirect_url))
                 {
-                    token = retinfo.redirect_url.Split('&')[1].Split('=')[1];
+                    //token = retinfo.redirect_url.Split('&')[1].Split('=')[1];
+                    token = retinfo.redirect_url.Split('&')[2].Split('=')[1];
                     return true;
                 }
                 else
@@ -209,16 +217,12 @@ namespace Form_WebChat
             return sBuilder.ToString();
         }
 
-        private void downloadFile(int qid, string cname)
+        private List<AdModel> downloadFile(int qid, string cname, string adId)
         {
             try
             {
                 var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/snsstat?action=download_ques&qid={0}&cname={1}&token={2}", qid, cname, token);
-                //var downloadURL = string.Format("http://localhost:32461/filetest/index");
-
-
                 HttpWebRequest fileRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
-
                 fileRequest.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
                 fileRequest.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
                 fileRequest.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
@@ -234,22 +238,84 @@ namespace Form_WebChat
                     Cookie_WebChat = fileRequest.CookieContainer;
                     var responseText = Encoding.UTF8.GetString(ms.ToArray());
                     var tempResult = XmlHelper.XmlDeserialize<WeiXinRetInfo>(responseText, Encoding.UTF8);
+
                     System.Diagnostics.Debug.WriteLine(responseText);
+
+                    if (tempResult == null)
+                    {
+                        var customerDatas = responseText.Split(new string[] { "\n" }, StringSplitOptions.None).Where(c => !c.StartsWith("﻿姓名")).ToList();
+                        var dataResult = customerDatas.Select(e =>
+                        {
+                            if (!string.IsNullOrWhiteSpace(e))
+                            {
+                                var row = e.Split(',');
+                                if (row.Count() == 5)
+                                {
+                                    return new AdModel
+                                    {
+                                        CName = cname,
+                                        CustomerName = row[0],
+                                        Sex = row[1],
+                                        TelePhone = row[2],
+                                        Age = row[3],
+                                        AdId = adId,
+                                        City = cname.Substring(0, 2),
+                                    };
+                                }
+                            }
+                            return null;
+                        }).Where(t => t != null).ToList();
+                        return dataResult;
+                    }
+                    return null;
                 };
             }
             catch (Exception ex)
             {
-
+                return null;
             }
         }
 
         private void downAndHandleData()
         {
-
-            ADListModel.AvailableADList.ForEach(e =>
+            while (true)
             {
-                downloadFile(e.qid, e.cname);
-            });
+                var IncrementalList = new List<AdModel>();
+                var time = DateTime.Now;
+                ADListModel.AvailableADList.ForEach(e =>
+                {
+                    var tempList = downloadFile(e.qid, e.cname, e.ADID);
+                    tempList.ForEach(c =>
+                    {
+                        if (!CustomerListModel.AvailableCustomerList.Any(p => (p.AdId == c.AdId &&
+                            p.CustomerName == c.CustomerName &&
+                            p.Sex == c.Sex &&
+                            p.TelePhone == c.TelePhone)))
+                        {
+                            CustomerListModel.AvailableCustomerList.Add(c);
+                            IncrementalList.Add(c);
+                        }
+                    });
+                });
+                using (var webClient = new WebClient())
+                {
+                    var uploadModel = new UpLoadModel();
+                    uploadModel.time = time.ToString("yyyy-MM-dd HH:mm:ss");
+                    uploadModel.content = CustomerListModel.AvailableCustomerList.Select(e => new UpLoadContent
+                         {
+                             city = e.City,
+                             sex = e.Sex,
+                             name = e.CustomerName,
+                             phone = e.TelePhone,
+                             remark = e.CName,
+                         }).ToList();
+                    var uploadStr = JsonHelper.SerializeObject(uploadModel);
+                    var test = webClient.UploadData(uploadURL, "Post", Encoding.UTF8.GetBytes(uploadStr));
+                    System.Diagnostics.Debug.WriteLine(test);
+                }
+                CustomerListModel.SolidCache();
+                Thread.Sleep(intervalMinutes * 60 * 1000);
+            }
         }
     }
 }
