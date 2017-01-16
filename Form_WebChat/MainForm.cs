@@ -40,7 +40,7 @@ namespace Form_WebChat
                 binddalias = allLoginResult[4];
                 lbl_summary.Text = "自动登录成功，请扫下面二维码进行认证";
                 pictureBox1.Image = Image.FromStream(loadQR_code());
-                timer = new System.Timers.Timer(3000);   //实例化Timer类，设置间隔时间为10000毫秒；   
+                timer = new System.Timers.Timer(3000);
                 timer.Elapsed += (souce, ee) =>
                 {
                     retinfo = loginQrCode();
@@ -282,20 +282,24 @@ namespace Form_WebChat
             {
                 var IncrementalList = new List<AdModel>();
                 var time = DateTime.Now;
+                getAllADs();
                 ADListModel.AvailableADList.ForEach(e =>
                 {
-                    var tempList = downloadFile(e.qid, e.cname, e.ADID);
-                    tempList.ForEach(c =>
+                    if (e.qid > 0)
                     {
-                        if (!CustomerListModel.AvailableCustomerList.Any(p => (p.AdId == c.AdId &&
-                            p.CustomerName == c.CustomerName &&
-                            p.Sex == c.Sex &&
-                            p.TelePhone == c.TelePhone)))
+                        var tempList = downloadFile(e.qid, e.cname, e.ADID);
+                        tempList.ForEach(c =>
                         {
-                            CustomerListModel.AvailableCustomerList.Add(c);
-                            IncrementalList.Add(c);
-                        }
-                    });
+                            if (!CustomerListModel.AvailableCustomerList.Any(p => (p.AdId == c.AdId &&
+                                p.CustomerName == c.CustomerName &&
+                                p.Sex == c.Sex &&
+                                p.TelePhone == c.TelePhone)))
+                            {
+                                CustomerListModel.AvailableCustomerList.Add(c);
+                                IncrementalList.Add(c);
+                            }
+                        });
+                    }
                 });
                 using (var webClient = new WebClient())
                 {
@@ -316,6 +320,100 @@ namespace Form_WebChat
                 CustomerListModel.SolidCache();
                 Thread.Sleep(intervalMinutes * 60 * 1000);
             }
+        }
+
+        private void getAllADs()
+        {
+            var pageIndex = 1;
+            var maxPage = 1;
+            try
+            {
+                while (pageIndex <= maxPage)
+                {
+                    var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/sns_advert_mgr?page={0}&page_size=6&action=list&status=6&begin_time=1468944000&end_time=1500048000&list_type=2&token={1}&appid=&_={2}", pageIndex, token, "");
+                    HttpWebRequest AdRequests = (HttpWebRequest)WebRequest.Create(downloadURL);
+                    AdRequests.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+                    AdRequests.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                    AdRequests.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                    AdRequests.Headers.Add("Cache-Control", "max-age=0");
+                    AdRequests.CookieContainer = Cookie_WebChat;
+                    AdRequests.Method = "GET";
+                    AdRequests.KeepAlive = true;
+                    AdRequests.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
+                    HttpWebResponse responseFile = (HttpWebResponse)AdRequests.GetResponse();
+                    using (var ms = new MemoryStream())
+                    {
+                        responseFile.GetResponseStream().CopyTo(ms);
+                        Cookie_WebChat = AdRequests.CookieContainer;
+                        var responseText = Encoding.UTF8.GetString(ms.ToArray());
+                        var adList = JsonHelper.DeserializeObject<WebChatAdListModel>(responseText);
+                        if (adList != null)
+                        {
+                            if (adList.conf != null)
+                            {
+                                maxPage = adList.conf.total_page;
+                            }
+                            if (adList.list != null)
+                            {
+                                adList.list.ForEach(c =>
+                                {
+                                    if (c.campaign != null && !ADListModel.AvailableADList.Any(p => p.ADID == c.campaign.cid))
+                                    {
+                                        ADListModel.AvailableADList.Add(new downLoadFileModel
+                                        {
+                                            ADID = c.campaign.cid,
+                                            cname = c.campaign.cname,
+                                        });
+                                    }
+                                });
+                            }
+                            pageIndex++;
+                        }
+                        System.Diagnostics.Debug.WriteLine(responseText);
+                    };
+                }
+                ADListModel.AvailableADList.ForEach(j =>
+                {
+                    if (j.qid == 0)
+                    {
+                        j.qid = getPid(j.ADID);
+                    }
+                });
+                ADListModel.SolidCache();
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        private int getPid(string adID)
+        {
+            var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/sns_advert_mgr?action=creative_detail&cid={0}&token={1}&appid=&_={2}", adID, token, "");
+            HttpWebRequest AdRequests = (HttpWebRequest)WebRequest.Create(downloadURL);
+            AdRequests.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+            AdRequests.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+            AdRequests.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+            AdRequests.Headers.Add("Cache-Control", "max-age=0");
+            AdRequests.CookieContainer = Cookie_WebChat;
+            AdRequests.Method = "GET";
+            AdRequests.KeepAlive = true;
+            AdRequests.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
+            HttpWebResponse responseFile = (HttpWebResponse)AdRequests.GetResponse();
+            using (var ms = new MemoryStream())
+            {
+                responseFile.GetResponseStream().CopyTo(ms);
+                Cookie_WebChat = AdRequests.CookieContainer;
+                var responseText = Encoding.UTF8.GetString(ms.ToArray());
+                var adDetail = JsonHelper.DeserializeObject<ADDetailModel>(responseText);
+
+                System.Diagnostics.Debug.WriteLine(responseText);
+
+                if (adDetail != null && adDetail.questionnaire != null)
+                {
+                    return adDetail.questionnaire.qid;
+                }
+                return 0;
+            };
         }
     }
 }

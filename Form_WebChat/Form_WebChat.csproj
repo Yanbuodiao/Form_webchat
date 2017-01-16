@@ -63,11 +63,13 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Modle\ADDetailModel.cs" />
     <Compile Include="Modle\ADListModel.cs" />
     <Compile Include="Modle\AdModel.cs" />
     <Compile Include="Modle\CustomerListModel.cs" />
     <Compile Include="Modle\downLoadFileModel.cs" />
     <Compile Include="Modle\UpLoadModel.cs" />
+    <Compile Include="Modle\WebChatAdListModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Modle\WeiXinRetInfo.cs" />

@@ -14,6 +14,7 @@ namespace Form_WebChat
 
         static string downLoadFilesMenuKey;
         static object lockObj = new object();
+        static string path = System.Environment.CurrentDirectory + @"\AppData\ADList.xml";
         static ADListModel()
         {
             if (string.IsNullOrEmpty(downLoadFilesMenuKey))
@@ -27,30 +28,38 @@ namespace Form_WebChat
                 }
             }
         }
+
+        private static List<downLoadFileModel> availableADList;
         public static List<downLoadFileModel> AvailableADList
         {
             get
             {
                 try
                 {
-                    var availableDownLoadFiles = HttpRuntime.Cache[downLoadFilesMenuKey] as List<downLoadFileModel>;
-                    if (availableDownLoadFiles == null)
+                    if (AvailableADList == null)
                     {
-                        string path = System.Environment.CurrentDirectory + @"\AppData\ADList.xml";
-                        if (System.IO.File.Exists(path))//如果缓存文件存在,直接从缓存文件加载
+                        availableADList = HttpRuntime.Cache[downLoadFilesMenuKey] as List<downLoadFileModel>;
+                        if (availableADList == null)
                         {
-                            availableDownLoadFiles = XmlHelper.XmlDeserializeFromFile<List<downLoadFileModel>>(path, Encoding.UTF8);
+                            if (System.IO.File.Exists(path))//如果缓存文件存在,直接从缓存文件加载
+                            {
+                                availableADList = XmlHelper.XmlDeserializeFromFile<List<downLoadFileModel>>(path, Encoding.UTF8);
+                            }
+                            if (availableADList == null)
+                            {
+                                availableADList = new List<downLoadFileModel>();
+                            }
+                            CacheDependency dep = new CacheDependency(path);
+                            //添加到缓存中
+                            HttpRuntime.Cache.Insert(downLoadFilesMenuKey,
+                                availableADList,
+                                dep,
+                                System.Web.Caching.Cache.NoAbsoluteExpiration,
+                                System.Web.Caching.Cache.NoSlidingExpiration,
+                                CacheItemPriority.High, null);
                         }
-                        CacheDependency dep = new CacheDependency(path);
-                        //添加到缓存中
-                        HttpRuntime.Cache.Insert(downLoadFilesMenuKey,
-                            availableDownLoadFiles,
-                            dep,
-                            System.Web.Caching.Cache.NoAbsoluteExpiration,
-                            System.Web.Caching.Cache.NoSlidingExpiration,
-                            CacheItemPriority.High, null);
                     }
-                    return availableDownLoadFiles;
+                    return availableADList;
                 }
                 catch (Exception ex)
                 {
@@ -59,6 +68,11 @@ namespace Form_WebChat
             }
         }
 
+        public static void SolidCache()
+        {
+            HttpRuntime.Cache[downLoadFilesMenuKey] = availableADList;
+            XmlHelper.XmlSerializeToFile(availableADList, path, Encoding.UTF8);
+        }
         #endregion
     }
 }
