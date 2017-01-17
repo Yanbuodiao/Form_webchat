@@ -15,5 +15,8 @@ namespace Form_WebChat
         public string TelePhone { get; set; }
         public string Age { get; set; }
         public string City { get; set; }
+        public string Remark { get; set; }
+        public int UpdateState { get; set; }
+        public DateTime UpdateTime { get; set; }
     }
 }

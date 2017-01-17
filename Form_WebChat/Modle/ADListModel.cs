@@ -36,7 +36,7 @@ namespace Form_WebChat
             {
                 try
                 {
-                    if (AvailableADList == null)
+                    if (availableADList == null)
                     {
                         availableADList = HttpRuntime.Cache[downLoadFilesMenuKey] as List<downLoadFileModel>;
                         if (availableADList == null)
