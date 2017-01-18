@@ -587,7 +587,7 @@ namespace Form_WebChat
         {
             richTextBox1.BeginInvoke(new MethodInvoker(() =>
             {
-                richTextBox1.AppendText(string.Format("{0}---{1}\r\n", DateTime.Now.ToString("yy-MM-dd hh:mm:ss"), msg));
+                richTextBox1.AppendText(string.Format("{0}---{1}\r\n", DateTime.Now.ToString("yy-MM-dd HH:mm:ss"), msg));
                 var maxlenth = 200;
                 if (richTextBox1.Lines.Length > maxlenth)
                 {
