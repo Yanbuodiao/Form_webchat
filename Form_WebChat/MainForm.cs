@@ -58,17 +58,10 @@ namespace Form_WebChat
                     lbl_summary.Text = "未登录成功！";
                     showMessage("未登录成功");
                 }
-
-                //sendMessage("测试短信");
-
-                //CustomerListModel.AvailableCustomerList.Where(t => t.UpdateState == 0).ToList().ForEach(p => { p.UpdateState = 1; p.UpdateTime = DateTime.Now; });
-
-                //CustomerListModel.SolidCache();
-
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---自动登录---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
             }
@@ -129,7 +122,7 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---二维码认证---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
                 return null;
@@ -175,7 +168,7 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---自动登录---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
                 return null;
@@ -206,7 +199,7 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---下载认证二维码---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
                 return new MemoryStream();
@@ -217,7 +210,6 @@ namespace Form_WebChat
         {
             try
             {
-
                 var url = string.Format("https://mp.weixin.qq.com/cgi-bin/bizlogin?action=login&token=&lang=zh_CN ");
                 var postStr = "token=&lang=zh_CN&f=json&ajax=1&random=" + Math.Round(new Random(Guid.NewGuid().GetHashCode()).NextDouble(), 15);
                 byte[] byteArray = Encoding.UTF8.GetBytes(postStr); // 转化
@@ -262,7 +254,7 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---获取登录token---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
                 return false;
@@ -345,15 +337,17 @@ namespace Form_WebChat
                         showMessage(string.Format("下载成功了{0}条数据", dataResult.Count));
                         return dataResult;
                     }
-                    return null;
+                    var msgStr = string.Format("下载文件---Error---腾讯接口发生变化，未解析数据");
+                    showMessage(msgStr);
+                    return new List<AdModel>();
                 };
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("下载文件---Error---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
-                return null;
+                return new List<AdModel>();
             }
         }
 
@@ -393,7 +387,7 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---下载处理数据---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
             }
@@ -460,7 +454,7 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---上传数据---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
                 throw;
@@ -535,7 +529,7 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---获得广告列表---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
             }
@@ -576,7 +570,7 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                var msgStr = string.Format("Error---{0}", ex.Message);
+                var msgStr = string.Format("Error---获取qid---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
                 return 0;
