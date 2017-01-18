@@ -1,10 +1,12 @@
 ﻿using Form_WebChat.Modle;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -19,6 +21,7 @@ namespace Form_WebChat
         static string strMPPassword = System.Configuration.ConfigurationManager.AppSettings["PWD"].Trim();
         static int intervalMinutes = int.Parse(System.Configuration.ConfigurationManager.AppSettings["IntervalMinutes"].Trim());
         static string uploadURL = System.Configuration.ConfigurationManager.AppSettings["UploadURL"].Trim();
+        static string sendMSGURL = System.Configuration.ConfigurationManager.AppSettings["SendMSGURL"].Trim();
         static string appticket;
         static string binddalias;
         static CookieContainer Cookie_WebChat = new CookieContainer();//接收缓存
@@ -33,38 +36,41 @@ namespace Form_WebChat
         {
             try
             {
-                //WeiXinRetInfo retinfo = webChatLogin();
-                //if (retinfo != null && retinfo.base_resp.ret == 0)
-                //{
-                //    var allLoginResult = retinfo.redirect_url.Split('&');
-                //    appticket = allLoginResult[3];
-                //    binddalias = allLoginResult[4];
-                //    lbl_summary.Text = "自动登录成功，请扫下面二维码进行认证";
-                //    showMessage("自动登录成功，请扫下面二维码进行认证");
-                //    pictureBox1.Image = Image.FromStream(loadQR_code());
-                //    timer = new System.Timers.Timer(3000);
-                //    timer.Elapsed += (souce, ee) =>
-                //    {
-                //        retinfo = loginQrCode();
-                //    };
-                //    timer.AutoReset = true;
-                //    timer.Enabled = true;
-                //}
-                //else
-                //{
-                //    lbl_summary.Text = "未登录成功！";
-                //    showMessage("未登录成功");
-                //}
+                WeiXinRetInfo retinfo = webChatLogin();
+                if (retinfo != null && retinfo.base_resp.ret == 0)
+                {
+                    var allLoginResult = retinfo.redirect_url.Split('&');
+                    appticket = allLoginResult[3];
+                    binddalias = allLoginResult[4];
+                    lbl_summary.Text = "自动登录成功，请扫下面二维码进行认证";
+                    showMessage("自动登录成功，请扫下面二维码进行认证");
+                    pictureBox1.Image = Image.FromStream(loadQR_code());
+                    timer = new System.Timers.Timer(3000);
+                    timer.Elapsed += (souce, ee) =>
+                    {
+                        retinfo = loginQrCode();
+                    };
+                    timer.AutoReset = true;
+                    timer.Enabled = true;
+                }
+                else
+                {
+                    lbl_summary.Text = "未登录成功！";
+                    showMessage("未登录成功");
+                }
 
+                //sendMessage("测试短信");
 
-                CustomerListModel.AvailableCustomerList.ForEach(p => { p.UpdateState = 1; p.UpdateTime = DateTime.Now; });
+                //CustomerListModel.AvailableCustomerList.Where(t => t.UpdateState == 0).ToList().ForEach(p => { p.UpdateState = 1; p.UpdateTime = DateTime.Now; });
 
-                CustomerListModel.SolidCache();
+                //CustomerListModel.SolidCache();
 
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
             }
         }
 
@@ -123,7 +129,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
                 return null;
             }
         }
@@ -167,7 +175,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
                 return null;
             }
         }
@@ -196,7 +206,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
                 return new MemoryStream();
             }
         }
@@ -250,7 +262,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
                 return false;
             }
         }
@@ -336,7 +350,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
                 return null;
             }
         }
@@ -377,7 +393,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
             }
         }
 
@@ -404,6 +422,7 @@ namespace Form_WebChat
                         var uploadModel = new UpLoadModel();
                         uploadModel.time = time.ToString("yyyy-MM-dd HH:mm:ss");
                         uploadModel.content = allData.Skip(index * size).Take(size).ToList();
+                        var temp = CustomerListModel.AvailableCustomerList.Skip(index * size).Take(size).ToList();
                         var uploadStr = JsonHelper.SerializeObject(uploadModel);
                         var responseBytes = webClient.UploadData(uploadURL, "Post", Encoding.UTF8.GetBytes(uploadStr));
                         var responseText = Encoding.UTF8.GetString(responseBytes);
@@ -415,16 +434,16 @@ namespace Form_WebChat
                         {
                             if (adDetail.status == "200")
                             {
-                                CustomerListModel.AvailableCustomerList.Where(e => e.UpdateState == 0).ToList().ForEach(p =>
+                                CustomerListModel.AvailableCustomerList.Where(e => e.UpdateState == 0 && temp.Any(x => x.TelePhone == e.TelePhone)).ToList().ForEach(p =>
                                 {
                                     p.UpdateState = 1;
                                     p.UpdateTime = DateTime.Now;
                                 });
-                                showMessage(string.Format("本次上传成功了{0}条数据", uploadModel.content.Count));
+                                showMessage(string.Format("本次第{0}次上传，成功了{1}条数据", index + 1, uploadModel.content.Count));
                             }
                             if (adDetail.status == "400")
                             {
-                                CustomerListModel.AvailableCustomerList.Where(e => e.UpdateState == 0).ToList().ForEach(p =>
+                                CustomerListModel.AvailableCustomerList.Where(e => e.UpdateState == 0 && temp.Any(x => x.TelePhone == e.TelePhone)).ToList().ForEach(p =>
                                 {
                                     if (!adDetail.list.Any(t => t == p.TelePhone))
                                     {
@@ -432,7 +451,7 @@ namespace Form_WebChat
                                         p.UpdateTime = DateTime.Now;
                                     }
                                 });
-                                showMessage(string.Format("本次上传成功了{0}条数据；失败了{0}条数据", uploadModel.content.Count - adDetail.list.Count, adDetail.list.Count));
+                                showMessage(string.Format("本次第{0}次上传，成功了{1}条数据；失败了{2}条数据", index + 1, uploadModel.content.Count - adDetail.list.Count, adDetail.list.Count));
                             }
                         }
                         index++;
@@ -441,7 +460,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
                 throw;
             }
         }
@@ -514,7 +535,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
             }
         }
 
@@ -553,7 +576,9 @@ namespace Form_WebChat
             }
             catch (Exception ex)
             {
-                showMessage(string.Format("Error---{0}", ex.Message));
+                var msgStr = string.Format("Error---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
                 return 0;
             }
         }
@@ -571,12 +596,31 @@ namespace Form_WebChat
                     string[] sNewLines = new string[maxlenth];
                     Array.Copy(sLines, outLineLenghth, sNewLines, 0, maxlenth);
                     richTextBox1.Lines = sNewLines;
-
                 }
-
                 richTextBox1.SelectionStart = richTextBox1.TextLength;
                 richTextBox1.Focus();
             }), null);
+        }
+
+        private void sendMessage(string msg)
+        {
+            try
+            {
+                var model = new SendMSGModel { time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), explain = msg };
+                using (var webClient = new WebClient())
+                {
+                    var uploadStr = JsonHelper.SerializeObject(model);
+                    var responseBytes = webClient.UploadData(sendMSGURL, "Post", Encoding.UTF8.GetBytes(uploadStr));
+                    var responseText = Encoding.UTF8.GetString(responseBytes);
+                    showMessage("发送报警短信完毕");
+                }
+            }
+            catch (Exception ex)
+            {
+                var msgStr = string.Format("Error---发送短信---{0}", ex.Message);
+                showMessage(msgStr);
+            }
+
         }
     }
 }

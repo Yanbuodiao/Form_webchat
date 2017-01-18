@@ -28,4 +28,18 @@ namespace Form_WebChat.Modle
         public string sex { get; set; }
         public string remark { get; set; }
     }
+
+    public class SendMSGModel
+    {
+        public string code
+        {
+            get
+            {
+                var sinStr = string.Format("metenGG123{0}", time);
+                return EncryptUtils.EncryptByMD5(sinStr, "", "utf-8");
+            }
+        }
+        public string time { get; set; }
+        public string explain { get; set; }
+    }
 }
