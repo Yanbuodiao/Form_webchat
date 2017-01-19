@@ -283,6 +283,7 @@ namespace Form_WebChat
         {
             try
             {
+                Thread.Sleep(randomSeconde());
                 var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/snsstat?action=download_ques&qid={0}&cname={1}&token={2}", qid, cname, token);
                 HttpWebRequest fileRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
                 fileRequest.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
@@ -359,6 +360,7 @@ namespace Form_WebChat
                 {
                     var IncrementalList = new List<AdModel>();
                     var time = DateTime.Now;
+                    refreshCookie();
                     getAllADs();
                     ADListModel.AvailableADList.ForEach(e =>
                     {
@@ -393,6 +395,28 @@ namespace Form_WebChat
             }
         }
 
+        private int randomSeconde()
+        {
+            var second = new Random(Guid.NewGuid().GetHashCode()).Next(1, 5);
+            showMessage(string.Format("随机等待{0}秒钟",second));
+            return second* 1000;
+        }
+
+        private void refreshCookie()
+        {
+            var downloadURL = string.Format("https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN&token={0}", token);
+            HttpWebRequest fileRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
+            fileRequest.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+            fileRequest.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+            fileRequest.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+            fileRequest.Headers.Add("Cache-Control", "max-age=0");
+            fileRequest.CookieContainer = Cookie_WebChat;
+            fileRequest.Method = "GET";
+            fileRequest.KeepAlive = true;
+            fileRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
+            HttpWebResponse responseFile = (HttpWebResponse)fileRequest.GetResponse();
+        }
+
         private void uploadData(DateTime time)
         {
             try
@@ -416,7 +440,6 @@ namespace Form_WebChat
                         var uploadModel = new UpLoadModel();
                         uploadModel.time = time.ToString("yyyy-MM-dd HH:mm:ss");
                         uploadModel.content = allData.Skip(index * size).Take(size).ToList();
-                        var temp = CustomerListModel.AvailableCustomerList.Skip(index * size).Take(size).ToList();
                         var uploadStr = JsonHelper.SerializeObject(uploadModel);
                         var responseBytes = webClient.UploadData(uploadURL, "Post", Encoding.UTF8.GetBytes(uploadStr));
                         var responseText = Encoding.UTF8.GetString(responseBytes);
@@ -428,7 +451,7 @@ namespace Form_WebChat
                         {
                             if (adDetail.status == "200")
                             {
-                                CustomerListModel.AvailableCustomerList.Where(e => e.UpdateState == 0 && temp.Any(x => x.TelePhone == e.TelePhone)).ToList().ForEach(p =>
+                                CustomerListModel.AvailableCustomerList.Where(e => e.UpdateState == 0 && uploadModel.content.Any(x => x.phone == e.TelePhone)).ToList().ForEach(p =>
                                 {
                                     p.UpdateState = 1;
                                     p.UpdateTime = DateTime.Now;
@@ -470,6 +493,7 @@ namespace Form_WebChat
                 showMessage(string.Format("开始刷新广告列表"));
                 while (pageIndex <= maxPage)
                 {
+                    Thread.Sleep(randomSeconde());
                     var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/sns_advert_mgr?page={0}&page_size=6&action=list&status=6&begin_time=1468944000&end_time=1500048000&list_type=2&token={1}&appid=&_={2}", pageIndex, token, "");
                     HttpWebRequest AdRequests = (HttpWebRequest)WebRequest.Create(downloadURL);
                     AdRequests.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
@@ -539,6 +563,7 @@ namespace Form_WebChat
         {
             try
             {
+                Thread.Sleep(randomSeconde());
                 var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/sns_advert_mgr?action=creative_detail&cid={0}&token={1}&appid=&_={2}", adID, token, "");
                 HttpWebRequest AdRequests = (HttpWebRequest)WebRequest.Create(downloadURL);
                 AdRequests.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
