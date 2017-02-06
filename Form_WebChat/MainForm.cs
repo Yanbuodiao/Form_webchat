@@ -20,6 +20,7 @@ namespace Form_WebChat
         static string strMPAccount = System.Configuration.ConfigurationManager.AppSettings["UserName"].Trim();
         static string strMPPassword = System.Configuration.ConfigurationManager.AppSettings["PWD"].Trim();
         static int intervalMinutes = int.Parse(System.Configuration.ConfigurationManager.AppSettings["IntervalMinutes"].Trim());
+        static int timeoutMinutes = int.Parse(System.Configuration.ConfigurationManager.AppSettings["TimeOutMinutes"].Trim());
         static string uploadURL = System.Configuration.ConfigurationManager.AppSettings["UploadURL"].Trim();
         static string sendMSGURL = System.Configuration.ConfigurationManager.AppSettings["SendMSGURL"].Trim();
         static string appticket;
@@ -73,21 +74,22 @@ namespace Form_WebChat
             {
                 WeiXinRetInfo retinfo;
                 var url = string.Format("https://mp.weixin.qq.com/cgi-bin/loginqrcode?action=ask&token=&lang=zh_CN&token=&lang=zh_CN&f=json&ajax=1&random={0}", Math.Round(new Random(Guid.NewGuid().GetHashCode()).NextDouble(), 15));
-                HttpWebRequest logined_Request = (HttpWebRequest)WebRequest.Create(url);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
-                logined_Request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-                logined_Request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
-                logined_Request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
-                logined_Request.Headers.Add("Cache-Control", "max-age=0");
-                logined_Request.CookieContainer = Cookie_WebChat;
-                logined_Request.Method = "GET";
-                logined_Request.KeepAlive = true;
-                logined_Request.UserAgent = userAgent;
-                HttpWebResponse responseLogined = (HttpWebResponse)logined_Request.GetResponse();
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+                request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                request.Headers.Add("Cache-Control", "max-age=0");
+                request.CookieContainer = Cookie_WebChat;
+                request.Method = "GET";
+                request.KeepAlive = true;
+                request.UserAgent = userAgent;
+                HttpWebResponse responseLogined = (HttpWebResponse)request.GetResponse();
                 using (var ms = new MemoryStream())
                 {
                     responseLogined.GetResponseStream().CopyTo(ms);
-                    Cookie_WebChat = logined_Request.CookieContainer;
+                    Cookie_WebChat = request.CookieContainer;
                     var responseText = Encoding.UTF8.GetString(ms.ToArray());
                     showMessage("查询二维码认证状态");
 #if DEBUG
@@ -137,32 +139,32 @@ namespace Form_WebChat
                 string padata = "username=" + System.Web.HttpUtility.UrlEncode(strMPAccount) + "&pwd=" + password + "&imgcode=&f=json";
                 string url = "https://mp.weixin.qq.com/cgi-bin/bizlogin?action=startlogin";//请求登录的URL
                 byte[] byteArray = Encoding.UTF8.GetBytes(padata); // 转化
-                HttpWebRequest loginRequest = (HttpWebRequest)WebRequest.Create(url);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Accept = "application/json, text/javascript, */*; q=0.01";
+                request.Headers.Add("Accept-Encoding", "gzip, deflate");
+                request.Headers.Add("Accept-Language", "zh-cn");
+                request.Headers.Add("Cache-Control", "no-cache");
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.Referer = "http://mp.weixin.qq.com/cgi-bin/loginpage?lang=zh_CN&t=wxm2-login"; ;
+                request.Headers.Add("x-requested-with", "XMLHttpRequest");
+                request.CookieContainer = Cookie_WebChat;
+                request.Method = "POST";
 
-                loginRequest.Accept = "application/json, text/javascript, */*; q=0.01";
-                loginRequest.Headers.Add("Accept-Encoding", "gzip, deflate");
-                loginRequest.Headers.Add("Accept-Language", "zh-cn");
-                loginRequest.Headers.Add("Cache-Control", "no-cache");
-                loginRequest.ContentType = "application/x-www-form-urlencoded";
-                loginRequest.Referer = "http://mp.weixin.qq.com/cgi-bin/loginpage?lang=zh_CN&t=wxm2-login"; ;
-                loginRequest.Headers.Add("x-requested-with", "XMLHttpRequest");
-                loginRequest.CookieContainer = Cookie_WebChat;
-                loginRequest.Method = "POST";
+                request.AllowAutoRedirect = true;
+                request.KeepAlive = true;
+                request.ContentLength = byteArray.Length;
+                request.UserAgent = userAgent;
 
-                loginRequest.AllowAutoRedirect = true;
-                loginRequest.KeepAlive = true;
-                loginRequest.ContentLength = byteArray.Length;
-                loginRequest.UserAgent = userAgent;
-
-                Stream newStream = loginRequest.GetRequestStream();
+                Stream newStream = request.GetRequestStream();
                 // Send the data.
                 newStream.Write(byteArray, 0, byteArray.Length);    //写入参数
                 newStream.Close();
-                HttpWebResponse responseLogin = (HttpWebResponse)loginRequest.GetResponse();
+                HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse();
                 showMessage("开始自动登录");
                 StreamReader srLogin = new StreamReader(responseLogin.GetResponseStream(), Encoding.Default);
                 string textLogin = srLogin.ReadToEnd();
-                Cookie_WebChat = loginRequest.CookieContainer;
+                Cookie_WebChat = request.CookieContainer;
                 WeiXinRetInfo retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(textLogin);
                 return retinfo;
             }
@@ -180,20 +182,20 @@ namespace Form_WebChat
             try
             {
                 var url = string.Format("https://mp.weixin.qq.com/cgi-bin/loginqrcode?action=getqrcode&param=4300&rd={0}", new Random().Next(1, 1000));
-                HttpWebRequest QR_CodeRequest = (HttpWebRequest)WebRequest.Create(url);
-
-                QR_CodeRequest.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-                QR_CodeRequest.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
-                QR_CodeRequest.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
-                QR_CodeRequest.Headers.Add("Cache-Control", "max-age=0");
-                QR_CodeRequest.CookieContainer = Cookie_WebChat;
-                QR_CodeRequest.Method = "GET";
-                QR_CodeRequest.KeepAlive = true;
-                QR_CodeRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                HttpWebResponse responseLogin = (HttpWebResponse)QR_CodeRequest.GetResponse();
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+                request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                request.Headers.Add("Cache-Control", "max-age=0");
+                request.CookieContainer = Cookie_WebChat;
+                request.Method = "GET";
+                request.KeepAlive = true;
+                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
+                HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse();
                 var ms = new MemoryStream();
                 responseLogin.GetResponseStream().CopyTo(ms);
-                Cookie_WebChat = QR_CodeRequest.CookieContainer;
+                Cookie_WebChat = request.CookieContainer;
                 showMessage("认证二维码下载成功");
                 return ms;
             }
@@ -213,27 +215,27 @@ namespace Form_WebChat
                 var url = string.Format("https://mp.weixin.qq.com/cgi-bin/bizlogin?action=login&token=&lang=zh_CN ");
                 var postStr = "token=&lang=zh_CN&f=json&ajax=1&random=" + Math.Round(new Random(Guid.NewGuid().GetHashCode()).NextDouble(), 15);
                 byte[] byteArray = Encoding.UTF8.GetBytes(postStr); // 转化
-                HttpWebRequest token_Request = (HttpWebRequest)WebRequest.Create(url);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
-                token_Request.Accept = "application/json, text/javascript, */*; q=0.01";
-                token_Request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
-                token_Request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
-                token_Request.Referer = string.Format("https://mp.weixin.qq.com/cgi-bin/readtemplate?t=user/validate_wx_tmpl&lang=zh_CN&account={0}&{1}&{2}&wx_protect=1&bind_app_type=1&grey=1", System.Web.HttpUtility.UrlEncode(strMPAccount), appticket, binddalias);
-                token_Request.CookieContainer = Cookie_WebChat;
-                token_Request.Method = "POST";
-                token_Request.KeepAlive = true;
-                token_Request.UserAgent = userAgent;
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Accept = "application/json, text/javascript, */*; q=0.01";
+                request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                request.Referer = string.Format("https://mp.weixin.qq.com/cgi-bin/readtemplate?t=user/validate_wx_tmpl&lang=zh_CN&account={0}&{1}&{2}&wx_protect=1&bind_app_type=1&grey=1", System.Web.HttpUtility.UrlEncode(strMPAccount), appticket, binddalias);
+                request.CookieContainer = Cookie_WebChat;
+                request.Method = "POST";
+                request.KeepAlive = true;
+                request.UserAgent = userAgent;
 
-                Stream newStream = token_Request.GetRequestStream();
-                // Send the data.
-                newStream.Write(byteArray, 0, byteArray.Length);    //写入参数
+                Stream newStream = request.GetRequestStream();
+                newStream.Write(byteArray, 0, byteArray.Length);    
                 newStream.Close();
 
-                HttpWebResponse responseLogined = (HttpWebResponse)token_Request.GetResponse();
+                HttpWebResponse responseLogined = (HttpWebResponse)request.GetResponse();
                 using (var ms = new MemoryStream())
                 {
                     responseLogined.GetResponseStream().CopyTo(ms);
-                    Cookie_WebChat = token_Request.CookieContainer;
+                    Cookie_WebChat = request.CookieContainer;
                     var responseText = Encoding.UTF8.GetString(ms.ToArray());
 #if DEBUG
                     System.Diagnostics.Debug.WriteLine(responseText);
@@ -285,20 +287,21 @@ namespace Form_WebChat
             {
                 Thread.Sleep(randomSeconde());
                 var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/snsstat?action=download_ques&qid={0}&cname={1}&token={2}", qid, cname, token);
-                HttpWebRequest fileRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
-                fileRequest.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-                fileRequest.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
-                fileRequest.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
-                fileRequest.Headers.Add("Cache-Control", "max-age=0");
-                fileRequest.CookieContainer = Cookie_WebChat;
-                fileRequest.Method = "GET";
-                fileRequest.KeepAlive = true;
-                fileRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                HttpWebResponse responseFile = (HttpWebResponse)fileRequest.GetResponse();
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(downloadURL);
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+                request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                request.Headers.Add("Cache-Control", "max-age=0");
+                request.CookieContainer = Cookie_WebChat;
+                request.Method = "GET";
+                request.KeepAlive = true;
+                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
+                HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse();
                 using (var ms = new MemoryStream())
                 {
                     responseFile.GetResponseStream().CopyTo(ms);
-                    Cookie_WebChat = fileRequest.CookieContainer;
+                    Cookie_WebChat = request.CookieContainer;
                     var responseText = Encoding.UTF8.GetString(ms.ToArray());
                     var tempResult = XmlHelper.XmlDeserialize<WeiXinRetInfo>(responseText, Encoding.UTF8);
 #if DEBUG
@@ -408,16 +411,17 @@ namespace Form_WebChat
             {
                 showMessage("刷新登录Cookie");
                 var downloadURL = string.Format("https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN&token={0}", token);
-                HttpWebRequest fileRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
-                fileRequest.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-                fileRequest.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
-                fileRequest.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
-                fileRequest.Headers.Add("Cache-Control", "max-age=0");
-                fileRequest.CookieContainer = Cookie_WebChat;
-                fileRequest.Method = "GET";
-                fileRequest.KeepAlive = true;
-                fileRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                HttpWebResponse responseFile = (HttpWebResponse)fileRequest.GetResponse();
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(downloadURL);
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+                request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                request.Headers.Add("Cache-Control", "max-age=0");
+                request.CookieContainer = Cookie_WebChat;
+                request.Method = "GET";
+                request.KeepAlive = true;
+                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
+                HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse();
             }
             catch (Exception ex)
             {
@@ -504,23 +508,23 @@ namespace Form_WebChat
                 while (pageIndex <= maxPage)
                 {
                     Thread.Sleep(randomSeconde());
-                    showMessage(string.Format("刷新第{0}页的广告",pageIndex));
+                    showMessage(string.Format("刷新第{0}页的广告", pageIndex));
                     var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/sns_advert_mgr?page={0}&page_size=6&action=list&status=6&begin_time=1468944000&end_time=1500048000&list_type=2&token={1}&appid=&_={2}", pageIndex, token, "");
-                    HttpWebRequest AdRequests = (HttpWebRequest)WebRequest.Create(downloadURL);
-                    AdRequests.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-                    AdRequests.Timeout = 60 * 1000;
-                    AdRequests.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
-                    AdRequests.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
-                    AdRequests.Headers.Add("Cache-Control", "max-age=0");
-                    AdRequests.CookieContainer = Cookie_WebChat;
-                    AdRequests.Method = "GET";
-                    AdRequests.KeepAlive = true;
-                    AdRequests.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                    HttpWebResponse responseFile = (HttpWebResponse)AdRequests.GetResponse();
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(downloadURL);
+                    request.Timeout = timeoutMinutes * 60 * 1000;
+                    request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+                    request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                    request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                    request.Headers.Add("Cache-Control", "max-age=0");
+                    request.CookieContainer = Cookie_WebChat;
+                    request.Method = "GET";
+                    request.KeepAlive = true;
+                    request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
+                    HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse();
                     using (var ms = new MemoryStream())
                     {
                         responseFile.GetResponseStream().CopyTo(ms);
-                        Cookie_WebChat = AdRequests.CookieContainer;
+                        Cookie_WebChat = request.CookieContainer;
                         var responseText = Encoding.UTF8.GetString(ms.ToArray());
                         var adList = JsonHelper.DeserializeObject<WebChatAdListModel>(responseText);
                         if (adList != null)
@@ -555,7 +559,7 @@ namespace Form_WebChat
                 {
                     if (j.qid == 0)
                     {
-                        j.qid = getPid(j.ADID,j.cname);
+                        j.qid = getPid(j.ADID, j.cname);
                     }
                 });
                 showMessage(string.Format("刷新广告的pid完毕"));
@@ -570,28 +574,28 @@ namespace Form_WebChat
             }
         }
 
-        private int getPid(string adID,string cname)
+        private int getPid(string adID, string cname)
         {
             try
             {
                 Thread.Sleep(randomSeconde());
-                showMessage(string.Format("刷新广告'{0}'的qid",cname));
+                showMessage(string.Format("刷新广告'{0}'的qid", cname));
                 var downloadURL = string.Format("https://mp.weixin.qq.com/promotion/snsdelivery/sns_advert_mgr?action=creative_detail&cid={0}&token={1}&appid=&_={2}", adID, token, "");
-                HttpWebRequest AdRequests = (HttpWebRequest)WebRequest.Create(downloadURL);
-                AdRequests.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-                AdRequests.Timeout = 60 * 1000;
-                AdRequests.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
-                AdRequests.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
-                AdRequests.Headers.Add("Cache-Control", "max-age=0");
-                AdRequests.CookieContainer = Cookie_WebChat;
-                AdRequests.Method = "GET";
-                AdRequests.KeepAlive = true;
-                AdRequests.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                HttpWebResponse responseFile = (HttpWebResponse)AdRequests.GetResponse();
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(downloadURL);
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+                request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                request.Headers.Add("Cache-Control", "max-age=0");
+                request.CookieContainer = Cookie_WebChat;
+                request.Method = "GET";
+                request.KeepAlive = true;
+                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
+                HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse();
                 using (var ms = new MemoryStream())
                 {
                     responseFile.GetResponseStream().CopyTo(ms);
-                    Cookie_WebChat = AdRequests.CookieContainer;
+                    Cookie_WebChat = request.CookieContainer;
                     var responseText = Encoding.UTF8.GetString(ms.ToArray());
                     var adDetail = JsonHelper.DeserializeObject<ADDetailModel>(responseText);
 #if DEBUG
