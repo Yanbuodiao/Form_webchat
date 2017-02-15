@@ -28,6 +28,7 @@ namespace Form_WebChat
         static CookieContainer Cookie_WebChat = new CookieContainer();//接收缓存
         static string token;
         static System.Timers.Timer timer;
+        static bool haveSendMSg;
         public MainForm()
         {
             InitializeComponent();
@@ -228,7 +229,7 @@ namespace Form_WebChat
                 request.UserAgent = userAgent;
 
                 Stream newStream = request.GetRequestStream();
-                newStream.Write(byteArray, 0, byteArray.Length);    
+                newStream.Write(byteArray, 0, byteArray.Length);
                 newStream.Close();
 
                 HttpWebResponse responseLogined = (HttpWebResponse)request.GetResponse();
@@ -400,7 +401,7 @@ namespace Form_WebChat
 
         private int randomSeconde()
         {
-            var second = new Random(Guid.NewGuid().GetHashCode()).Next(1, 5);
+            var second = new Random(Guid.NewGuid().GetHashCode()).Next(2, 5);
             showMessage(string.Format("随机等待{0}秒钟", second));
             return second * 1000;
         }
@@ -641,13 +642,21 @@ namespace Form_WebChat
         {
             try
             {
-                var model = new SendMSGModel { time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), explain = msg };
-                using (var webClient = new WebClient())
+                if (!haveSendMSg)
                 {
-                    var uploadStr = JsonHelper.SerializeObject(model);
-                    var responseBytes = webClient.UploadData(sendMSGURL, "Post", Encoding.UTF8.GetBytes(uploadStr));
-                    var responseText = Encoding.UTF8.GetString(responseBytes);
-                    showMessage("发送报警短信完毕");
+                    var model = new SendMSGModel { time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), explain = msg };
+                    using (var webClient = new WebClient())
+                    {
+                        var uploadStr = JsonHelper.SerializeObject(model);
+                        var responseBytes = webClient.UploadData(sendMSGURL, "Post", Encoding.UTF8.GetBytes(uploadStr));
+                        var responseText = Encoding.UTF8.GetString(responseBytes);
+                        showMessage("发送报警短信完毕");
+                    }
+                    haveSendMSg = true;
+                }
+                else
+                {
+                    showMessage("已经发送过报警短信，不再发送");
                 }
             }
             catch (Exception ex)
