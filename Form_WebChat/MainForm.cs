@@ -86,39 +86,41 @@ namespace Form_WebChat
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = userAgent;
-                HttpWebResponse responseLogined = (HttpWebResponse)request.GetResponse();
-                using (var ms = new MemoryStream())
+                using (HttpWebResponse responseLogined = (HttpWebResponse)request.GetResponse())
                 {
-                    responseLogined.GetResponseStream().CopyTo(ms);
-                    Cookie_WebChat = request.CookieContainer;
-                    var responseText = Encoding.UTF8.GetString(ms.ToArray());
-                    showMessage("查询二维码认证状态");
-#if DEBUG
-                    System.Diagnostics.Debug.WriteLine(responseText);
-#endif
-                    retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(responseText);
-                    if (retinfo.status == 1)
+                    using (var ms = new MemoryStream())
                     {
-                        timer.Stop();
-                        if (getCookieAndToken())
+                        responseLogined.GetResponseStream().CopyTo(ms);
+                        Cookie_WebChat = request.CookieContainer;
+                        var responseText = Encoding.UTF8.GetString(ms.ToArray());
+                        showMessage("查询二维码认证状态");
+#if DEBUG
+                        System.Diagnostics.Debug.WriteLine(responseText);
+#endif
+                        retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(responseText);
+                        if (retinfo.status == 1)
                         {
-                            lbl_summary.BeginInvoke(new MethodInvoker(() =>
+                            timer.Stop();
+                            if (getCookieAndToken())
                             {
-                                lbl_summary.Text = "认证成功，开始下载数据并处理";
-                                showMessage("认证成功，开始下载数据并处理");
-                                pictureBox1.Visible = false;
-                                ThreadPool.QueueUserWorkItem(_ =>
+                                lbl_summary.BeginInvoke(new MethodInvoker(() =>
                                 {
-                                    downAndHandleData();
-                                });
-                            }), null);
+                                    lbl_summary.Text = "认证成功，开始下载数据并处理";
+                                    showMessage("认证成功，开始下载数据并处理");
+                                    pictureBox1.Visible = false;
+                                    ThreadPool.QueueUserWorkItem(_ =>
+                                    {
+                                        downAndHandleData();
+                                    });
+                                }), null);
+                            }
+                            else
+                            {
+                                showMessage("认证失败");
+                                lbl_summary.BeginInvoke(new MethodInvoker(() => lbl_summary.Text = "认证失败"), null);
+                            }
+                            timer.Close();
                         }
-                        else
-                        {
-                            showMessage("认证失败");
-                            lbl_summary.BeginInvoke(new MethodInvoker(() => lbl_summary.Text = "认证失败"), null);
-                        }
-                        timer.Close();
                     }
                 }
                 return retinfo;
@@ -161,13 +163,15 @@ namespace Form_WebChat
                 // Send the data.
                 newStream.Write(byteArray, 0, byteArray.Length);    //写入参数
                 newStream.Close();
-                HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse();
-                showMessage("开始自动登录");
-                StreamReader srLogin = new StreamReader(responseLogin.GetResponseStream(), Encoding.Default);
-                string textLogin = srLogin.ReadToEnd();
-                Cookie_WebChat = request.CookieContainer;
-                WeiXinRetInfo retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(textLogin);
-                return retinfo;
+                using (HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse())
+                {
+                    showMessage("开始自动登录");
+                    StreamReader srLogin = new StreamReader(responseLogin.GetResponseStream(), Encoding.Default);
+                    string textLogin = srLogin.ReadToEnd();
+                    Cookie_WebChat = request.CookieContainer;
+                    WeiXinRetInfo retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(textLogin);
+                    return retinfo;
+                }
             }
             catch (Exception ex)
             {
@@ -232,26 +236,28 @@ namespace Form_WebChat
                 newStream.Write(byteArray, 0, byteArray.Length);
                 newStream.Close();
 
-                HttpWebResponse responseLogined = (HttpWebResponse)request.GetResponse();
-                using (var ms = new MemoryStream())
+                using (HttpWebResponse responseLogined = (HttpWebResponse)request.GetResponse())
                 {
-                    responseLogined.GetResponseStream().CopyTo(ms);
-                    Cookie_WebChat = request.CookieContainer;
-                    var responseText = Encoding.UTF8.GetString(ms.ToArray());
+                    using (var ms = new MemoryStream())
+                    {
+                        responseLogined.GetResponseStream().CopyTo(ms);
+                        Cookie_WebChat = request.CookieContainer;
+                        var responseText = Encoding.UTF8.GetString(ms.ToArray());
 #if DEBUG
-                    System.Diagnostics.Debug.WriteLine(responseText);
+                        System.Diagnostics.Debug.WriteLine(responseText);
 #endif
-                    WeiXinRetInfo retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(responseText);
-                    if (retinfo != null && !string.IsNullOrEmpty(retinfo.redirect_url))
-                    {
-                        //token = retinfo.redirect_url.Split('&')[1].Split('=')[1];
-                        token = retinfo.redirect_url.Split('&')[2].Split('=')[1];
-                        showMessage("token获取成功，开始数据下载及处理");
-                        return true;
-                    }
-                    else
-                    {
-                        return getCookieAndToken();
+                        WeiXinRetInfo retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(responseText);
+                        if (retinfo != null && !string.IsNullOrEmpty(retinfo.redirect_url))
+                        {
+                            //token = retinfo.redirect_url.Split('&')[1].Split('=')[1];
+                            token = retinfo.redirect_url.Split('&')[2].Split('=')[1];
+                            showMessage("token获取成功，开始数据下载及处理");
+                            return true;
+                        }
+                        else
+                        {
+                            return getCookieAndToken();
+                        }
                     }
                 }
             }
@@ -298,54 +304,56 @@ namespace Form_WebChat
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse();
-                using (var ms = new MemoryStream())
+                using (HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse())
                 {
-                    responseFile.GetResponseStream().CopyTo(ms);
-                    Cookie_WebChat = request.CookieContainer;
-                    var responseText = Encoding.UTF8.GetString(ms.ToArray());
-                    var tempResult = XmlHelper.XmlDeserialize<WeiXinRetInfo>(responseText, Encoding.UTF8);
+                    using (var ms = new MemoryStream())
+                    {
+                        responseFile.GetResponseStream().CopyTo(ms);
+                        Cookie_WebChat = request.CookieContainer;
+                        var responseText = Encoding.UTF8.GetString(ms.ToArray());
+                        var tempResult = XmlHelper.XmlDeserialize<WeiXinRetInfo>(responseText, Encoding.UTF8);
 #if DEBUG
-                    System.Diagnostics.Debug.WriteLine(responseText);
+                        System.Diagnostics.Debug.WriteLine(responseText);
 #endif
 
-                    if (tempResult == null)
-                    {
-                        var customerDatas = responseText.Split(new string[] { "\n" }, StringSplitOptions.None).Where(c => !c.StartsWith("﻿姓名")).ToList();
-                        var dataResult = customerDatas.Select(e =>
+                        if (tempResult == null)
                         {
-                            if (!string.IsNullOrWhiteSpace(e))
+                            var customerDatas = responseText.Split(new string[] { "\n" }, StringSplitOptions.None).Where(c => !c.StartsWith("﻿姓名")).ToList();
+                            var dataResult = customerDatas.Select(e =>
                             {
-                                var row = e.Split(',');
-                                if (row.Count() >= 4)
+                                if (!string.IsNullOrWhiteSpace(e))
                                 {
-                                    var adModel = new AdModel
+                                    var row = e.Split(',');
+                                    if (row.Count() >= 4)
                                     {
-                                        CName = cname,
-                                        CustomerName = row[0],
-                                        Sex = row[1],
-                                        TelePhone = row[2],
-                                        Age = row[3],
-                                        AdId = adId,
-                                        City = cname.Substring(0, 2),
-                                    };
-                                    adModel.Remark = string.Format("{0}--{1}--{2}--{3}", cname
-                                        , row.Count() > 3 ? row[3] : ""
-                                        , row.Count() > 4 ? row[4] : ""
-                                        , row.Count() > 5 ? row[5] : "");
-                                    return adModel;
+                                        var adModel = new AdModel
+                                        {
+                                            CName = cname,
+                                            CustomerName = row[0],
+                                            Sex = row[1],
+                                            TelePhone = row[2],
+                                            Age = row[3],
+                                            AdId = adId,
+                                            City = cname.Substring(0, 2),
+                                        };
+                                        adModel.Remark = string.Format("{0}--{1}--{2}--{3}", cname
+                                            , row.Count() > 3 ? row[3] : ""
+                                            , row.Count() > 4 ? row[4] : ""
+                                            , row.Count() > 5 ? row[5] : "");
+                                        return adModel;
+                                    }
                                 }
-                            }
-                            return null;
-                        }).Where(t => t != null).ToList();
+                                return null;
+                            }).Where(t => t != null).ToList();
 
-                        showMessage(string.Format("下载成功了{0}条数据", dataResult.Count));
-                        return dataResult;
+                            showMessage(string.Format("下载成功了{0}条数据", dataResult.Count));
+                            return dataResult;
+                        }
+                        var msgStr = string.Format("下载文件---Error---腾讯接口发生变化，未解析数据");
+                        showMessage(msgStr);
+                        return new List<AdModel>();
                     }
-                    var msgStr = string.Format("下载文件---Error---腾讯接口发生变化，未解析数据");
-                    showMessage(msgStr);
-                    return new List<AdModel>();
-                };
+                }
             }
             catch (Exception ex)
             {
@@ -422,7 +430,10 @@ namespace Form_WebChat
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse();
+                using (HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse())
+                {
+                    Cookie_WebChat = request.CookieContainer;
+                }
             }
             catch (Exception ex)
             {
@@ -521,51 +532,53 @@ namespace Form_WebChat
                     request.Method = "GET";
                     request.KeepAlive = true;
                     request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                    HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse();
-                    using (var ms = new MemoryStream())
+                    using (HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse())
                     {
-                        responseFile.GetResponseStream().CopyTo(ms);
-                        Cookie_WebChat = request.CookieContainer;
-                        var responseText = Encoding.UTF8.GetString(ms.ToArray());
-                        var adList = JsonHelper.DeserializeObject<WebChatAdListModel>(responseText);
-                        if (adList != null)
+                        using (var ms = new MemoryStream())
                         {
-                            if (adList.conf != null)
+                            responseFile.GetResponseStream().CopyTo(ms);
+                            Cookie_WebChat = request.CookieContainer;
+                            var responseText = Encoding.UTF8.GetString(ms.ToArray());
+                            var adList = JsonHelper.DeserializeObject<WebChatAdListModel>(responseText);
+                            if (adList != null)
                             {
-                                maxPage = adList.conf.total_page;
-                            }
-                            if (adList.list != null)
-                            {
-                                adList.list.ForEach(c =>
+                                if (adList.conf != null)
                                 {
-                                    if (c.campaign != null && !ADListModel.AvailableADList.Any(p => p.ADID == c.campaign.cid))
+                                    maxPage = adList.conf.total_page;
+                                }
+                                if (adList.list != null)
+                                {
+                                    adList.list.ForEach(c =>
                                     {
-                                        ADListModel.AvailableADList.Add(new downLoadFileModel
+                                        if (c.campaign != null && !ADListModel.AvailableADList.Any(p => p.ADID == c.campaign.cid))
                                         {
-                                            ADID = c.campaign.cid,
-                                            cname = c.campaign.cname,
-                                        });
-                                    }
-                                });
+                                            ADListModel.AvailableADList.Add(new downLoadFileModel
+                                            {
+                                                ADID = c.campaign.cid,
+                                                cname = c.campaign.cname,
+                                            });
+                                        }
+                                    });
+                                }
+                                pageIndex++;
                             }
-                            pageIndex++;
-                        }
 #if DEBUG
-                        System.Diagnostics.Debug.WriteLine(responseText);
+                            System.Diagnostics.Debug.WriteLine(responseText);
 #endif
-                    };
-                }
-                showMessage(string.Format("开始刷新广告的pid"));
-                ADListModel.AvailableADList.ForEach(j =>
-                {
-                    if (j.qid == 0)
-                    {
-                        j.qid = getPid(j.ADID, j.cname);
+                        };
                     }
-                });
-                showMessage(string.Format("刷新广告的pid完毕"));
-                ADListModel.SolidCache();
-                showMessage(string.Format("刷新广告列表完毕"));
+                    showMessage(string.Format("开始刷新广告的pid"));
+                    ADListModel.AvailableADList.ForEach(j =>
+                    {
+                        if (j.qid == 0)
+                        {
+                            j.qid = getPid(j.ADID, j.cname);
+                        }
+                    });
+                    showMessage(string.Format("刷新广告的pid完毕"));
+                    ADListModel.SolidCache();
+                    showMessage(string.Format("刷新广告列表完毕"));
+                }
             }
             catch (Exception ex)
             {
@@ -592,23 +605,25 @@ namespace Form_WebChat
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse();
-                using (var ms = new MemoryStream())
+                using (HttpWebResponse responseFile = (HttpWebResponse)request.GetResponse())
                 {
-                    responseFile.GetResponseStream().CopyTo(ms);
-                    Cookie_WebChat = request.CookieContainer;
-                    var responseText = Encoding.UTF8.GetString(ms.ToArray());
-                    var adDetail = JsonHelper.DeserializeObject<ADDetailModel>(responseText);
+                    using (var ms = new MemoryStream())
+                    {
+                        responseFile.GetResponseStream().CopyTo(ms);
+                        Cookie_WebChat = request.CookieContainer;
+                        var responseText = Encoding.UTF8.GetString(ms.ToArray());
+                        var adDetail = JsonHelper.DeserializeObject<ADDetailModel>(responseText);
 #if DEBUG
-                    System.Diagnostics.Debug.WriteLine(responseText);
+                        System.Diagnostics.Debug.WriteLine(responseText);
 #endif
 
-                    if (adDetail != null && adDetail.questionnaire != null)
-                    {
-                        return adDetail.questionnaire.qid;
+                        if (adDetail != null && adDetail.questionnaire != null)
+                        {
+                            return adDetail.questionnaire.qid;
+                        }
+                        return 0;
                     }
-                    return 0;
-                };
+                }
             }
             catch (Exception ex)
             {
