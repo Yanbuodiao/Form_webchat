@@ -83,6 +83,7 @@ namespace Form_WebChat
                 request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                 request.Headers.Add("Cache-Control", "max-age=0");
                 request.CookieContainer = Cookie_WebChat;
+                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = userAgent;
@@ -151,6 +152,7 @@ namespace Form_WebChat
                 request.ContentType = "application/x-www-form-urlencoded";
                 request.Referer = "http://mp.weixin.qq.com/cgi-bin/loginpage?lang=zh_CN&t=wxm2-login"; ;
                 request.Headers.Add("x-requested-with", "XMLHttpRequest");
+                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.CookieContainer = Cookie_WebChat;
                 request.Method = "POST";
 
@@ -194,15 +196,18 @@ namespace Form_WebChat
                 request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                 request.Headers.Add("Cache-Control", "max-age=0");
                 request.CookieContainer = Cookie_WebChat;
+                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
-                HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse();
-                var ms = new MemoryStream();
-                responseLogin.GetResponseStream().CopyTo(ms);
-                Cookie_WebChat = request.CookieContainer;
-                showMessage("认证二维码下载成功");
-                return ms;
+                using (HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse())
+                {
+                    var ms = new MemoryStream();
+                    responseLogin.GetResponseStream().CopyTo(ms);
+                    Cookie_WebChat = request.CookieContainer;
+                    showMessage("认证二维码下载成功");
+                    return ms;
+                }
             }
             catch (Exception ex)
             {
@@ -228,6 +233,7 @@ namespace Form_WebChat
                 request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                 request.Referer = string.Format("https://mp.weixin.qq.com/cgi-bin/readtemplate?t=user/validate_wx_tmpl&lang=zh_CN&account={0}&{1}&{2}&wx_protect=1&bind_app_type=1&grey=1", System.Web.HttpUtility.UrlEncode(strMPAccount), appticket, binddalias);
                 request.CookieContainer = Cookie_WebChat;
+                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.Method = "POST";
                 request.KeepAlive = true;
                 request.UserAgent = userAgent;
@@ -301,6 +307,7 @@ namespace Form_WebChat
                 request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                 request.Headers.Add("Cache-Control", "max-age=0");
                 request.CookieContainer = Cookie_WebChat;
+                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
@@ -427,6 +434,7 @@ namespace Form_WebChat
                 request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                 request.Headers.Add("Cache-Control", "max-age=0");
                 request.CookieContainer = Cookie_WebChat;
+                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
@@ -528,6 +536,7 @@ namespace Form_WebChat
                     request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
                     request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                     request.Headers.Add("Cache-Control", "max-age=0");
+                    request.AutomaticDecompression =DecompressionMethods.None|DecompressionMethods.GZip | DecompressionMethods.Deflate;
                     request.CookieContainer = Cookie_WebChat;
                     request.Method = "GET";
                     request.KeepAlive = true;
@@ -602,6 +611,7 @@ namespace Form_WebChat
                 request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                 request.Headers.Add("Cache-Control", "max-age=0");
                 request.CookieContainer = Cookie_WebChat;
+                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.Method = "GET";
                 request.KeepAlive = true;
                 request.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17";
