@@ -1,12 +1,10 @@
 ﻿using Form_WebChat.Modle;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -82,12 +80,12 @@ namespace Form_WebChat
                 request.Headers.Add("Upgrade-Insecure-Requests", "1");
                 request.UserAgent = userAgent;
                 request.Method = "GET";
-                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";                
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
                 request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
                 request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                 request.Referer = "http://mp.weixin.qq.com/cgi-bin/loginpage?lang=zh_CN&t=wxm2-login";
                 request.CookieContainer = Cookie_WebChat;
-                
+
                 using (HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse())
                 {
                     showMessage("开始刷新登陆页");
