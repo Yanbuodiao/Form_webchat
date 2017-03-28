@@ -38,6 +38,7 @@ namespace Form_WebChat
         {
             try
             {
+                viewLoginView();
                 WeiXinRetInfo retinfo = webChatLogin();
                 if (retinfo != null && retinfo.base_resp.ret == 0)
                 {
@@ -66,6 +67,89 @@ namespace Form_WebChat
                 var msgStr = string.Format("Error---自动登录---{0}", ex.Message);
                 showMessage(msgStr);
                 sendMessage(msgStr);
+            }
+        }
+        private void viewLoginView()
+        {
+            try
+            {
+                string url = "https://mp.weixin.qq.com/";//请求登录的URL
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Host = "mp.weixin.qq.com";
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.KeepAlive = true;
+                request.Headers.Add("Cache-Control", "max-age=0");
+                request.Headers.Add("Upgrade-Insecure-Requests", "1");
+                request.UserAgent = userAgent;
+                request.Method = "GET";
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";                
+                request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
+                request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
+                request.Referer = "http://mp.weixin.qq.com/cgi-bin/loginpage?lang=zh_CN&t=wxm2-login";
+                request.CookieContainer = Cookie_WebChat;
+                
+                using (HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse())
+                {
+                    showMessage("开始刷新登陆页");
+                    StreamReader srLogin = new StreamReader(responseLogin.GetResponseStream(), Encoding.Default);
+                    string textLogin = srLogin.ReadToEnd();
+                    Cookie_WebChat = request.CookieContainer;
+                }
+            }
+            catch (Exception ex)
+            {
+                var msgStr = string.Format("Error---刷新登陆页---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
+            }
+        }
+
+        private WeiXinRetInfo webChatLogin()
+        {
+            try
+            {
+                string password = GetMd5Str32(strMPPassword).ToUpper();
+                string padata = "username=" + System.Web.HttpUtility.UrlEncode(strMPAccount) + "&pwd=" + password + "&imgcode=&f=json";
+                string url = "https://mp.weixin.qq.com/cgi-bin/bizlogin?action=startlogin";//请求登录的URL
+                byte[] byteArray = Encoding.UTF8.GetBytes(padata); // 转化
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Accept = "application/json, text/javascript, */*; q=0.01";
+                request.Headers.Add("Accept-Encoding", "gzip, deflate");
+                request.Headers.Add("Accept-Language", "zh-cn");
+                request.Headers.Add("Cache-Control", "no-cache");
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.Referer = "http://mp.weixin.qq.com/cgi-bin/loginpage?lang=zh_CN&t=wxm2-login"; ;
+                request.Headers.Add("x-requested-with", "XMLHttpRequest");
+                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
+                request.CookieContainer = Cookie_WebChat;
+                request.Method = "POST";
+
+                request.AllowAutoRedirect = true;
+                request.KeepAlive = true;
+                request.ContentLength = byteArray.Length;
+                request.UserAgent = userAgent;
+
+                Stream newStream = request.GetRequestStream();
+                // Send the data.
+                newStream.Write(byteArray, 0, byteArray.Length);    //写入参数
+                newStream.Close();
+                using (HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse())
+                {
+                    showMessage("开始自动登录");
+                    StreamReader srLogin = new StreamReader(responseLogin.GetResponseStream(), Encoding.Default);
+                    string textLogin = srLogin.ReadToEnd();
+                    Cookie_WebChat = request.CookieContainer;
+                    WeiXinRetInfo retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(textLogin);
+                    return retinfo;
+                }
+            }
+            catch (Exception ex)
+            {
+                var msgStr = string.Format("Error---自动登录---{0}", ex.Message);
+                showMessage(msgStr);
+                sendMessage(msgStr);
+                return null;
             }
         }
 
@@ -135,55 +219,6 @@ namespace Form_WebChat
             }
         }
 
-        private WeiXinRetInfo webChatLogin()
-        {
-            try
-            {
-                string password = GetMd5Str32(strMPPassword).ToUpper();
-                string padata = "username=" + System.Web.HttpUtility.UrlEncode(strMPAccount) + "&pwd=" + password + "&imgcode=&f=json";
-                string url = "https://mp.weixin.qq.com/cgi-bin/bizlogin?action=startlogin";//请求登录的URL
-                byte[] byteArray = Encoding.UTF8.GetBytes(padata); // 转化
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Timeout = timeoutMinutes * 60 * 1000;
-                request.Accept = "application/json, text/javascript, */*; q=0.01";
-                request.Headers.Add("Accept-Encoding", "gzip, deflate");
-                request.Headers.Add("Accept-Language", "zh-cn");
-                request.Headers.Add("Cache-Control", "no-cache");
-                request.ContentType = "application/x-www-form-urlencoded";
-                request.Referer = "http://mp.weixin.qq.com/cgi-bin/loginpage?lang=zh_CN&t=wxm2-login"; ;
-                request.Headers.Add("x-requested-with", "XMLHttpRequest");
-                request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
-                request.CookieContainer = Cookie_WebChat;
-                request.Method = "POST";
-
-                request.AllowAutoRedirect = true;
-                request.KeepAlive = true;
-                request.ContentLength = byteArray.Length;
-                request.UserAgent = userAgent;
-
-                Stream newStream = request.GetRequestStream();
-                // Send the data.
-                newStream.Write(byteArray, 0, byteArray.Length);    //写入参数
-                newStream.Close();
-                using (HttpWebResponse responseLogin = (HttpWebResponse)request.GetResponse())
-                {
-                    showMessage("开始自动登录");
-                    StreamReader srLogin = new StreamReader(responseLogin.GetResponseStream(), Encoding.Default);
-                    string textLogin = srLogin.ReadToEnd();
-                    Cookie_WebChat = request.CookieContainer;
-                    WeiXinRetInfo retinfo = Newtonsoft.Json.JsonConvert.DeserializeObject<WeiXinRetInfo>(textLogin);
-                    return retinfo;
-                }
-            }
-            catch (Exception ex)
-            {
-                var msgStr = string.Format("Error---自动登录---{0}", ex.Message);
-                showMessage(msgStr);
-                sendMessage(msgStr);
-                return null;
-            }
-        }
-
         private Stream loadQR_code()
         {
             try
@@ -228,6 +263,7 @@ namespace Form_WebChat
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
                 request.Timeout = timeoutMinutes * 60 * 1000;
+                request.Host = "mp.weixin.qq.com";
                 request.Accept = "application/json, text/javascript, */*; q=0.01";
                 request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
                 request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
@@ -236,6 +272,9 @@ namespace Form_WebChat
                 request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.Method = "POST";
                 request.KeepAlive = true;
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.Headers.Add("charset", "UTF-8");
+                request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 request.UserAgent = userAgent;
 
                 Stream newStream = request.GetRequestStream();
@@ -456,13 +495,13 @@ namespace Form_WebChat
             try
             {
                 var allData = CustomerListModel.AvailableCustomerList.Where(e => e.UpdateState == 0).Select(e => new UpLoadContent
-                    {
-                        city = e.City,
-                        sex = e.Sex,
-                        name = e.CustomerName,
-                        phone = e.TelePhone,
-                        remark = e.CName,
-                    }).ToList();
+                {
+                    city = e.City,
+                    sex = e.Sex,
+                    name = e.CustomerName,
+                    phone = e.TelePhone,
+                    remark = e.CName,
+                }).ToList();
                 var index = 0;
                 var size = 10;
                 var maxIndex = allData.Count / size + 1;
@@ -536,7 +575,7 @@ namespace Form_WebChat
                     request.Headers.Add("Accept-Encoding", "gzip, deflate, sdch, br");
                     request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.8");
                     request.Headers.Add("Cache-Control", "max-age=0");
-                    request.AutomaticDecompression =DecompressionMethods.None|DecompressionMethods.GZip | DecompressionMethods.Deflate;
+                    request.AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate;
                     request.CookieContainer = Cookie_WebChat;
                     request.Method = "GET";
                     request.KeepAlive = true;
